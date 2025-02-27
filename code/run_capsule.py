@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import shutil
 from pathlib import Path
 from typing import Union
 
@@ -14,69 +15,67 @@ from pynwb import NWBHDF5IO
 
 
 # Load the remote NWB file from DANDI
-def combine_nwb_files(
-    ophys_nwb_fp: Path,
-    eye_tracking_nwb_fp: Path,
-    behavior_nwb_fp: Path,
-    export_fp: Path,
-):
-    """Combine multiple NWB files into a single NWB file
+def add_nwb_attribute(
+    main_io: Union[NWBHDF5IO, NWBZarrIO], sub_io: Union[NWBHDF5IO, NWBZarrIO]
+) -> Union[NWBHDF5IO, NWBZarrIO]:
+    """Get an attribute from the NWB file
 
     Parameters
     ----------
-    ophys_nwb_fp : Path
-        ophys movie
-    eye_tracking_nwb_fp : Path
-        eye tracking nwb
-    behavior_nwb_fp : Path
-        behavior nwb
-    export_fp : Path
-        export file path
-    """
-    ophys_io = determine_io(ophys_nwb_fp)
-    behavior_io = determine_io(behavior_nwb_fp)
-    eye_tracking_io = determine_io(eye_tracking_nwb_fp)
+    main_io : Union[NWBHDF5IO, NWBZarrIO]
+        the io object
+    sub_io : Union[NWBHDF5IO, NWBZarrIO]
+        the sub io object
 
-    with ophys_io(ophys_nwb_fp, "r") as io:
-        ophys_nwb = io.read()
-        with behavior_io(behavior_nwb_fp, "r") as read_io:
-            behavior_nwb = read_io.read()
-            for name, data in behavior_nwb.acquisition.items():
-                if name not in ophys_nwb.acquisition:
-                    data.reset_parent()
-                    ophys_nwb.add_acquisition(data)
-            for name, data in behavior_nwb.processing.items():
-                if name not in ophys_nwb.processing:
-                    data.reset_parent()
-                    ophys_nwb.add_processing_module(data)
-            for name, data in behavior_nwb.analysis.items():
-                if name not in ophys_nwb.analysis:
-                    data.reset_parent()
-                    ophys_nwb.add_analysis(data)
-            for name, interval in behavior_nwb.intervals.items():
-                if name not in ophys_nwb.intervals:
-                    data.reset_parent()
-                    ophys_nwb.add_interval(interval)
-        with eye_tracking_io(eye_tracking_nwb_fp, "r") as read_io:
-            eye_tracking_nwb = read_io.read()
-            for name, data in eye_tracking_nwb.acquisition.items():
-                if name not in ophys_nwb.acquisition:
-                    data.reset_parent()
-                    ophys_nwb.add_acquisition(data)
-            for name, data in eye_tracking_nwb.processing.items():
-                if name not in ophys_nwb.processing:
-                    data.reset_parent()
-                    ophys_nwb.add_processing_module(data)
-            for name, data in eye_tracking_nwb.analysis.items():
-                if name not in ophys_nwb.analysis:
-                    data.reset_parent()
-                    ophys_nwb.add_analysis(data)
-            for name, interval in eye_tracking_nwb.intervals.items():
-                if name not in ophys_nwb.intervals:
-                    data.reset_parent()
-                    ophys_nwb.add_interval(interval)
-            with NWBZarrIO(export_fp, mode="w") as export_io:
-                export_io.export(src_io=io, write_args=dict(link_data=False))
+    Returns
+    -------
+    Any
+        the attribute
+    """
+    for field_name in sub_io.fields.keys()():
+        for name, data in sub_io.get(field_name).items():
+            data.reset_parent()
+            if name not in main_io.get(field_name):
+                if field_name == "acquisition":
+                    main_io.add_acquisition(data)
+                elif field_name == "processing":
+                    main_io.add_processing_module(data)
+                elif field_name == "analysis":
+                    main_io.add_analysis(data)
+                elif field_name == "intervals":
+                    main_io.add_interval(data)
+                else:
+                    raise ValueError("Attribute not found")
+    return main_io
+
+
+def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> Path:
+    """Combine two NWB files and save to scratch directory
+
+    Parameters
+    ----------
+    main_nwb_fp : Path
+        path to the main NWB file
+    sub_nwb_fp : Path
+        path to the sub NWB file
+    scratch_fp : Path
+        path to the scratch directory
+
+    Returns
+    -------
+    Path
+        path to the combined NWB file
+    """
+    main_io = determine_io(main_nwb_fp)
+    sub_io = determine_io(sub_nwb_fp)
+    with main_io(main_nwb_fp, "r") as io:
+        main_nwb = io.read()
+        with sub_io(sub_nwb_fp, "r") as read_io:
+            sub_nwb = read_io.read()
+            main_nwb = add_nwb_attribute(main_nwb, sub_nwb)
+        with NWBZarrIO(scratch_fp, "w") as io:
+            io.export(src_io=main_nwb, write_args=dict(link_data=False))
+    return scratch_fp
 
 
 def determine_io(nwb_path: Path) -> Union[NWBHDF5IO, NWBZarrIO]:
@@ -101,12 +100,24 @@ def parse_args():
     """parse command line arguments"""
     argparser = argparse.ArgumentParser(description="Run the capsule")
     argparser.add_argument(
-        "--input-dir", type=str, help="Input directory", default="/data/"
+        "--input-dir", type=str, help="Input directory, default = /data", default="/data/"
     )
     argparser.add_argument(
-        "--output-dir", type=str, help="Output directory", default="/results/"
+        "--output-dir",
+        type=str,
+        help="Output directory, default = /results",
+        default="/results/",
     )
-
+    argparser.add_argument(
+        "--scratch-dir",
+        type=str,
+        help="Scratch directory, default = /scratch",
+        default="/scratch/",
+    )
+    # Not doing anything with this yet but will in the future
+    argparser.add_argument(
+        "--output-format", type=str, help="Output format, default = Zarr", default="Zarr"
+    )
     return argparser.parse_args()
 
 
@@ -115,16 +126,21 @@ def run():
     args = parse_args()
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
-    ophys_nwb = next(input_dir.glob("ophys/*.nwb"))
-    behavior_nwb = next(input_dir.glob("behavior/*.nwb"))
-    eye_tracking_nwb = next(input_dir.glob("eye_tracking/*.nwb"))
-    export_fp = output_dir / "session"
+    scratch_dir = Path(args.scratch_dir)
+    ophys_fp = next(input_dir.glob("ophys/*.nwb"))
+    behavior_fp = next(input_dir.glob("behavior/*.nwb"))
+    eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+    scratch_fp = scratch_dir / "scratch"
+
     logging.info(
-        "Combining NWB files, {}, {}, {}, to {}".format(
-            ophys_nwb, behavior_nwb, eye_tracking_nwb, export_fp
-        )
+        "Combining NWB files, {}, {} and {}".format(ophys_fp, behavior_fp, eye_fp)
     )
-    combine_nwb_files(ophys_nwb, eye_tracking_nwb, behavior_nwb, export_fp)
+    for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
+        if idx == 0:
+            output_fp = combine_nwb_file(ophys_fp, nwb_fp, scratch_fp)
+        else:
+            output_fp = combine_nwb_file(ophys_fp, nwb_fp, output_fp)
+    shutil.move(scratch_fp, output_dir)
     logging.info("Done")
 
 
