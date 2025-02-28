@@ -1,15 +1,15 @@
 """top level run script"""
 
 import argparse
+import datetime
 import logging
 import shutil
 from pathlib import Path
 from typing import Union
 
+import pynwb
 from hdmf_zarr import NWBZarrIO
 from pynwb import NWBHDF5IO
-import datetime
-import pynwb
 
 # From multiple input NWB files, in the future, I need to figure out a wayu to detrermine which nwb is which. For now, only the ophys nwb has the processing file so if it exists, I will assume that it is the primary nwb
 # # append ancillary data to the acquisition nwb
@@ -37,7 +37,12 @@ def add_nwb_attribute(
     for field_name in sub_io.fields.keys():
         attribute = getattr(sub_io, field_name)
         print(attribute)
-        if isinstance(attribute, str) or isinstance(attribute, datetime.datetime) or isinstance(attribute, list) or isinstance(attribute, pynwb.file.Subject):
+        if (
+            isinstance(attribute, str)
+            or isinstance(attribute, datetime.datetime)
+            or isinstance(attribute, list)
+            or isinstance(attribute, pynwb.file.Subject)
+        ):
             continue
         for name, data in getattr(sub_io, field_name).items():
             data.reset_parent()
@@ -51,7 +56,7 @@ def add_nwb_attribute(
                 elif field_name == "intervals":
                     main_io.add_interval(data)
                 else:
-                     raise ValueError("Attribute not found")
+                    raise ValueError("Attribute not found")
     return main_io
 
 
@@ -130,12 +135,10 @@ def run():
     scratch_dir = Path(args.scratch_dir)
     ophys_fp = next(input_dir.glob("ophys/*.nwb"))
     behavior_fp = next(input_dir.glob("behavior/*.nwb"))
-    #eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+    # eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
     scratch_fp = scratch_dir / "session.nwb"
 
-    logging.info(
-        "Combining NWB files, {}, {}".format(ophys_fp, behavior_fp)
-    )
+    logging.info("Combining NWB files, {}, {}".format(ophys_fp, behavior_fp))
     for idx, nwb_fp in enumerate([behavior_fp]):
         if idx == 0:
             output_fp = combine_nwb_file(ophys_fp, nwb_fp, scratch_fp)
