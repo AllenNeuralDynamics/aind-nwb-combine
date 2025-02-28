@@ -8,6 +8,8 @@ from typing import Union
 
 from hdmf_zarr import NWBZarrIO
 from pynwb import NWBHDF5IO
+import datetime
+import pynwb
 
 # From multiple input NWB files, in the future, I need to figure out a wayu to detrermine which nwb is which. For now, only the ophys nwb has the processing file so if it exists, I will assume that it is the primary nwb
 # # append ancillary data to the acquisition nwb
@@ -32,10 +34,14 @@ def add_nwb_attribute(
     Any
         the attribute
     """
-    for field_name in sub_io.fields.keys()():
-        for name, data in sub_io.get(field_name).items():
+    for field_name in sub_io.fields.keys():
+        attribute = getattr(sub_io, field_name)
+        print(attribute)
+        if isinstance(attribute, str) or isinstance(attribute, datetime.datetime) or isinstance(attribute, list) or isinstance(attribute, pynwb.file.Subject):
+            continue
+        for name, data in getattr(sub_io, field_name).items():
             data.reset_parent()
-            if name not in main_io.get(field_name):
+            if name not in getattr(main_io, field_name):
                 if field_name == "acquisition":
                     main_io.add_acquisition(data)
                 elif field_name == "processing":
@@ -45,7 +51,7 @@ def add_nwb_attribute(
                 elif field_name == "intervals":
                     main_io.add_interval(data)
                 else:
-                    raise ValueError("Attribute not found")
+                     raise ValueError("Attribute not found")
     return main_io
 
 
@@ -68,23 +74,18 @@ def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> P
     """
     main_io = determine_io(main_nwb_fp)
     sub_io = determine_io(sub_nwb_fp)
-    with main_io(main_nwb_fp, "r") as io:
-        main_nwb = io.read()
+    with main_io(main_nwb_fp, "r") as main_io:
+        main_nwb = main_io.read()
         with sub_io(sub_nwb_fp, "r") as read_io:
             sub_nwb = read_io.read()
             main_nwb = add_nwb_attribute(main_nwb, sub_nwb)
-        with NWBZarrIO(scratch_fp, "w") as io:
-            io.export(src_io=main_nwb, write_args=dict(link_data=False))
+            with NWBHDF5IO(scratch_fp, "w") as io:
+                io.export(src_io=main_io, write_args=dict(link_data=False))
     return scratch_fp
 
 
 def determine_io(nwb_path: Path) -> Union[NWBHDF5IO, NWBZarrIO]:
     """determine the io type
-
-    Parameters
-    ----------
-    nwb_path : Path
-        path to the nwb file
 
     Returns
     -------
@@ -92,8 +93,8 @@ def determine_io(nwb_path: Path) -> Union[NWBHDF5IO, NWBZarrIO]:
         the appropriate io object
     """
     if nwb_path.is_dir():
-        return NWBZarrIO(nwb_path, mode="r")
-    return NWBHDF5IO(nwb_path, mode="r")
+        return NWBZarrIO
+    return NWBHDF5IO
 
 
 def parse_args():
@@ -129,13 +130,13 @@ def run():
     scratch_dir = Path(args.scratch_dir)
     ophys_fp = next(input_dir.glob("ophys/*.nwb"))
     behavior_fp = next(input_dir.glob("behavior/*.nwb"))
-    eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
-    scratch_fp = scratch_dir / "scratch"
+    #eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+    scratch_fp = scratch_dir / "session.nwb"
 
     logging.info(
-        "Combining NWB files, {}, {} and {}".format(ophys_fp, behavior_fp, eye_fp)
+        "Combining NWB files, {}, {}".format(ophys_fp, behavior_fp)
     )
-    for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
+    for idx, nwb_fp in enumerate([behavior_fp]):
         if idx == 0:
             output_fp = combine_nwb_file(ophys_fp, nwb_fp, scratch_fp)
         else:
