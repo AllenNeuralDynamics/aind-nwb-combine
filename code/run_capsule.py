@@ -130,13 +130,13 @@ def run():
     scratch_dir = Path(args.scratch_dir)
     ophys_fp = next(input_dir.glob("ophys/*.nwb"))
     behavior_fp = next(input_dir.glob("behavior/*.nwb"))
-    #eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+    eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
     scratch_fp = scratch_dir / "session.nwb"
 
     logging.info(
-        "Combining NWB files, {}, {}".format(ophys_fp, behavior_fp)
+        "Combining NWB files, {}, {} and {}".format(ophys_fp, behavior_fp, eye_fp)
     )
-    for idx, nwb_fp in enumerate([behavior_fp]):
+    for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
         if idx == 0:
             output_fp = combine_nwb_file(ophys_fp, nwb_fp, scratch_fp)
         else:
