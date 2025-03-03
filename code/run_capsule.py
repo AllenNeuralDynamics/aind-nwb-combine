@@ -10,10 +10,39 @@ from typing import Union
 import pynwb
 from hdmf_zarr import NWBZarrIO
 from pynwb import NWBHDF5IO
+import tempfile
+import os
+import atexit
 
 # From multiple input NWB files, in the future, I need to figure out a wayu to detrermine which nwb is which. For now, only the ophys nwb has the processing file so if it exists, I will assume that it is the primary nwb
 # # append ancillary data to the acquisition nwb
 # Export appended nwb to the results folder
+
+
+def create_temp_nwb(save_strategy=Union[NWBHDF5IO, NWBZarrIO]) -> str:
+    """Create a temporary file and return the path
+
+    Parameters
+    ----------
+    save_strategy : Union[NWBHDF5IO, NWBZarrIO]
+        to determine if a temp file or directory should be created
+    Returns
+    -------
+    str
+        the path to the temporary file
+    """
+    if isinstance(save_strategy, NWBZarrIO):
+        temp = tempfile.TemporaryDirectory(delete=False)
+        temp_path = temp.name
+    else:
+        temp = tempfile.NamedTemporaryFile(delete=False, suffix=".nwb")
+        temp_path = temp.name
+    temp.close()
+
+    # Register cleanup function to run at program exit
+    atexit.register(os.unlink, temp_path)
+
+    return temp_path
 
 
 # Load the remote NWB file from DANDI
@@ -60,9 +89,7 @@ def add_nwb_attribute(
     return main_io
 
 
-def combine_nwb_file(
-    main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path, save_io
-) -> Path:
+def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, save_io) -> Path:
     """Combine two NWB files and save to scratch directory
 
     Parameters
@@ -71,8 +98,6 @@ def combine_nwb_file(
         path to the main NWB file
     sub_nwb_fp : Path
         path to the sub NWB file
-    scratch_fp : Path
-        path to the scratch directory
     save_io : Union[NWBHDF5IO, NWBZarrIO]
         how to save the nwb
     Returns
@@ -82,6 +107,7 @@ def combine_nwb_file(
     """
     main_io = determine_io(main_nwb_fp)
     sub_io = determine_io(sub_nwb_fp)
+    scratch_fp = create_temp_nwb(save_io)
     with main_io(main_nwb_fp, "r") as main_io:
         main_nwb = main_io.read()
         with sub_io(sub_nwb_fp, "r") as read_io:
@@ -151,13 +177,9 @@ def run():
     )
     for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
         if idx == 0:
-            output_fp = combine_nwb_file(
-                ophys_fp, nwb_fp, scratch_dir / "tmp.nwb", save_io
-            )
+            output_fp = combine_nwb_file(ophys_fp, nwb_fp, save_io)
         else:
-            output_fp = combine_nwb_file(
-                output_fp, nwb_fp, scratch_dir / f"tmp{idx}.nwb", save_io
-            )
+            output_fp = combine_nwb_file(output_fp, nwb_fp, save_io)
 
     shutil.move(output_fp, output_dir / "session.nwb")
     logging.info("Done")
