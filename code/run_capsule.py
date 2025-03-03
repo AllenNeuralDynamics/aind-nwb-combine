@@ -60,7 +60,7 @@ def add_nwb_attribute(
     return main_io
 
 
-def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> Path:
+def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path):
     """Combine two NWB files and save to scratch directory
 
     Parameters
@@ -72,10 +72,6 @@ def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> P
     scratch_fp : Path
         path to the scratch directory
 
-    Returns
-    -------
-    Path
-        path to the combined NWB file
     """
     main_io = determine_io(main_nwb_fp)
     sub_io = determine_io(sub_nwb_fp)
@@ -86,7 +82,6 @@ def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> P
             main_nwb = add_nwb_attribute(main_nwb, sub_nwb)
             with NWBHDF5IO(scratch_fp, "w") as io:
                 io.export(src_io=main_io, write_args=dict(link_data=False))
-    return scratch_fp
 
 
 def determine_io(nwb_path: Path) -> Union[NWBHDF5IO, NWBZarrIO]:
@@ -143,9 +138,9 @@ def run():
     )
     for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
         if idx == 0:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, scratch_fp)
+            combine_nwb_file(ophys_fp, nwb_fp, scratch_fp)
         else:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, output_fp)
+            combine_nwb_file(scratch_fp, nwb_fp, scratch_fp)
     shutil.move(scratch_fp, output_dir)
     logging.info("Done")
 
