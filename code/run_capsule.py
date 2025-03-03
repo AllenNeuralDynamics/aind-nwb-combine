@@ -60,7 +60,9 @@ def add_nwb_attribute(
     return main_io
 
 
-def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> Path:
+def combine_nwb_file(
+    main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path, save_io
+) -> Path:
     """Combine two NWB files and save to scratch directory
 
     Parameters
@@ -71,7 +73,8 @@ def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> P
         path to the sub NWB file
     scratch_fp : Path
         path to the scratch directory
-
+    save_io : Union[NWBHDF5IO, NWBZarrIO]
+        how to save the nwb
     Returns
     -------
     Path
@@ -84,7 +87,7 @@ def combine_nwb_file(main_nwb_fp: Path, sub_nwb_fp: Path, scratch_fp: Path) -> P
         with sub_io(sub_nwb_fp, "r") as read_io:
             sub_nwb = read_io.read()
             main_nwb = add_nwb_attribute(main_nwb, sub_nwb)
-            with NWBHDF5IO(scratch_fp, "w") as io:
+            with save_io(scratch_fp, "w") as io:
                 io.export(src_io=main_io, write_args=dict(link_data=False))
     return scratch_fp
 
@@ -122,7 +125,10 @@ def parse_args():
     )
     # Not doing anything with this yet but will in the future
     argparser.add_argument(
-        "--output-format", type=str, help="Output format, default = Zarr", default="Zarr"
+        "--output-format",
+        type=str,
+        help="Output format hdf5 or zarr, default = zarr",
+        default="zarr",
     )
     return argparser.parse_args()
 
@@ -136,15 +142,22 @@ def run():
     ophys_fp = next(input_dir.glob("ophys/*.nwb"))
     behavior_fp = next(input_dir.glob("behavior/*.nwb"))
     eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+    save_io = NWBZarrIO
+    if args.output_format.lower() == "hdf5":
+        save_io = NWBHDF5IO
 
     logging.info(
         "Combining NWB files, {}, {} and {}".format(ophys_fp, behavior_fp, eye_fp)
     )
     for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
         if idx == 0:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, scratch_dir / "tmp.nwb")
+            output_fp = combine_nwb_file(
+                ophys_fp, nwb_fp, scratch_dir / "tmp.nwb", save_io
+            )
         else:
-            output_fp = combine_nwb_file(output_fp, nwb_fp, scratch_dir / f"tmp{idx}.nwb")
+            output_fp = combine_nwb_file(
+                output_fp, nwb_fp, scratch_dir / f"tmp{idx}.nwb", save_io
+            )
 
     shutil.move(output_fp, output_dir / "session.nwb")
     logging.info("Done")
