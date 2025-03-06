@@ -1,8 +1,50 @@
 {
 	"version": 1,
-
-	"base_image": "codeocean/jupyterlab:3.0.9-miniconda4.9.2-python3.8-ubuntu20.04",
+	"base_image": "codeocean/mambaforge3:24.5.0-0-python3.12.4-ubuntu22.04",
+	"post_install": true,
 	"options": {
+		"registry_host_arg": true,
 		"git_ask_pass": true
+	},
+	"installers": {
+		"apt": {
+			"packages": [
+				{
+					"name": "vim",
+					"version": "2:8.2.3995-1ubuntu2.23"
+				}
+			],
+			"install_software_properties_common": true
+		},
+		"pip": {
+			"packages": [
+				{
+					"name": "git+https://github.com/AllenNeuralDynamics/aind-nwb-utils.git#egg=aind-nwb-utils",
+					"version": "fcce1d4d6d9d4736c58532d88c31ec1989b05e83"
+				},
+				{
+					"name": "hdmf-zarr",
+					"version": "0.11.0"
+				},
+				{
+					"name": "numpy",
+					"version": "2.2.3"
+				},
+				{
+					"name": "pydantic",
+					"version": "2.10.6"
+				},
+				{
+					"name": "pydantic-settings",
+					"version": "2.8.1"
+				},
+				{
+					"name": "pynwb",
+					"version": "3.0.0"
+				}
+			],
+			"options": {},
+			"pre_install_options": {}
+		}
 	}
 }
