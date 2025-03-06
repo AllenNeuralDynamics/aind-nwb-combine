@@ -1,0 +1,30 @@
+{
+	"version": 1,
+	"named_parameters": true,
+	"parameters": [
+		{
+			"id": "UMrBBvgz5ghGuPO0",
+			"name": "Input Directory",
+			"param_name": "input_dir",
+			"type": "text",
+			"value_type": "string",
+			"default_value": "/data"
+		},
+		{
+			"id": "Ct7pr8ttFmKCF9Ey",
+			"name": "Output Directory",
+			"param_name": "output_dir",
+			"type": "text",
+			"value_type": "string",
+			"default_value": "/results"
+		},
+		{
+			"id": "4pP5QB6gURfMIIlo",
+			"name": "Output Format",
+			"param_name": "output_format",
+			"type": "text",
+			"value_type": "string",
+			"default_value": "Zarr"
+		}
+	]
+}
