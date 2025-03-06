@@ -34,7 +34,6 @@ def run():
 
     logging.info(
         "Combining NWB files, %s, %s and %s", ophys_fp, behavior_fp, eye_fp)
-    )
     for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
         if idx == 0:
             output_fp = combine_nwb_file(ophys_fp, nwb_fp, save_io)
