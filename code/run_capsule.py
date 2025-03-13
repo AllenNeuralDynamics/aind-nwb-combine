@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings
 from pynwb import NWBHDF5IO
 
 
+
 class NWBCombineSettings(
     BaseSettings, cli_parse_args=True, cli_ignore_unknown_args=True
 ):
