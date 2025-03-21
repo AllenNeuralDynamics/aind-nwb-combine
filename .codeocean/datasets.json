@@ -6,6 +6,10 @@
 			"mount": "ophys"
 		},
 		{
+			"id": "bea2eef6-cbda-4e8a-ab40-e3d973bc85fc",
+			"mount": "ephys"
+		},
+		{
 			"id": "cea5c998-a823-4837-8f64-8b304c313b6f",
 			"mount": "behavior"
 		},

@@ -26,7 +26,7 @@ def run():
     combine_settings = NWBCombineSettings()
     input_dir = Path(combine_settings.input_dir)
     output_dir = Path(combine_settings.output_dir)
-    ophys_fp = next(input_dir.glob("ophys/*.nwb"))
+    ophys_fp = next(input_dir.glob("ephys/*.nwb"))
     behavior_fp = next(input_dir.glob("behavior/*.nwb"))
     eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
     save_io = NWBZarrIO
