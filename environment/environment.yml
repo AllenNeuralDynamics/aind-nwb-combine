@@ -1,0 +1,13 @@
+environment_version: 1
+credentials:
+- type: aws
+  id: WxCB1V7lvHxW49W0
+  description: AWS Assumable Role - aind-codeocean-user
+  access_key_id: AWS_ACCESS_KEY_ID
+  secret_access_key: AWS_SECRET_ACCESS_KEY
+  region: AWS_DEFAULT_REGION
+- type: api-key
+  id: xNbQe7IaWNfXp3II
+  description: desktop co token
+  key: API_KEY
+  secret: API_SECRET
