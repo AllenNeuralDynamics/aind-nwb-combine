@@ -2,16 +2,12 @@
 	"version": 1,
 	"attached_datasets": [
 		{
-			"id": "5c19bc2b-3332-40b0-9ff3-a801f32b020b",
-			"mount": "ophys"
-		},
-		{
-			"id": "cea5c998-a823-4837-8f64-8b304c313b6f",
+			"id": "a45244d5-a8d1-4722-b1dc-5d2d2163ab53",
 			"mount": "behavior"
 		},
 		{
-			"id": "dc0bf49d-5ecf-443c-8ef5-1a4430553c5d",
-			"mount": "eye_tracking"
+			"id": "d8d6076e-a856-40b3-884a-521601f687fd",
+			"mount": "ophys"
 		}
 	]
 }
