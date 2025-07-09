@@ -42,7 +42,7 @@ def run():
         "Combining NWB files, %s, %s and %s", ophys_fp, behavior_fp)
     for idx, nwb_fp in enumerate([behavior_fp]):
         if idx == 0:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, save_io)
+            output_fp = combine_nwb_file(ophys_fp, nwb_fp, "/scratch", save_io)
         
 
     shutil.move(output_fp, output_dir / name)

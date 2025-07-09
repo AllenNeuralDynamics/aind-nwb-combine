@@ -2,12 +2,12 @@
 	"version": 1,
 	"attached_datasets": [
 		{
-			"id": "095bd4dc-5a44-4e1a-a896-1e32d176ab84",
-			"mount": "ophys"
+			"id": "6f648e45-5bfc-40e0-b8f0-116b2d22b2ed",
+			"mount": "behavior"
 		},
 		{
-			"id": "baff60cd-9f82-4de7-b48b-43c5f2f2d027",
-			"mount": "behavior"
+			"id": "d8d6076e-a856-40b3-884a-521601f687fd",
+			"mount": "ophys"
 		}
 	]
 }
