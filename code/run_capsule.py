@@ -6,42 +6,55 @@ from pathlib import Path
 
 from aind_nwb_utils.utils import combine_nwb_file
 from hdmf_zarr import NWBZarrIO
-from pydantic_settings import BaseSettings
 from pynwb import NWBHDF5IO
+from hdmf_zarr import NWBZarrIO
+from pathlib import Path
+import numpy as np
+import argparse
 
 
+data_folder = Path("../data/")
+scratch_folder = Path("../scratch/")
+results_folder = Path("../results/")
 
-class NWBCombineSettings(
-    BaseSettings, cli_parse_args=True, cli_ignore_unknown_args=True
-):
-    """Settings for NWBCombine"""
-
-    input_dir: str = "/data"
-    output_dir: str = "/results"
-    output_format: str = "zarr"
 
 
 def run():
     """basic run function"""
-    combine_settings = NWBCombineSettings()
-    input_dir = Path(combine_settings.input_dir)
-    output_dir = Path(combine_settings.output_dir)
-    ophys_fp = next(input_dir.glob("ephys/*.nwb"))
-    behavior_fp = next(input_dir.glob("behavior/*.nwb"))
-    eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_dir", type=str, default=f'.')
+    parser.add_argument("--output_dir", type=str, default=f'.')
+    parser.add_argument("--output_format", type=str, default=f'hdf5')
+
+    args = parser.parse_args()
+
     save_io = NWBZarrIO
-    if combine_settings.output_format.lower() == "hdf5":
+    if args.output_format.lower() == "hdf5":
         save_io = NWBHDF5IO
 
-    logging.info(
-        "Combining NWB files, %s, %s and %s", ophys_fp, behavior_fp, eye_fp)
-    for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
-        if idx == 0:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, save_io)
-        else:
-            output_fp = combine_nwb_file(output_fp, nwb_fp, save_io)
+    input_dir = data_folder / args.input_dir
+    output_dir = results_folder / args.output_dir
 
-    shutil.move(output_fp, output_dir / "session.nwb")
+    combine_nwbs = [f for f in input_dir.rglob("*.nwb*") if f.name.endswith(".nwb") or f.name.endswith(".nwb.zarr")]
+
+    primary_nwb = None
+    for nwb_path in combine_nwbs:
+        if 'nwb_primary' in str(nwb_path):
+            combine_nwbs.remove(nwb_path)
+            primary_nwb = nwb_path
+            break
+    assert primary_nwb is not None, "Didn't find a primary NWB to combine with"
+    logging.info(f"Using primary NWB: {primary_nwb}")
+
+    assert len(combine_nwbs) >= 1, "Didn't find any non-primary NWBs to combine"
+    logging.info(f"Using combine NWBs: {combine_nwbs}")
+
+    output_nwb = primary_nwb
+    for combine_nwb in combine_nwbs:
+        logging.info("Combining NWB files; {output_nwb}, and {combine_nwb}")
+        output_nwb = combine_nwb_file(output_nwb, combine_nwb, "/scratch", save_io)
+
+    shutil.move(output_nwb, output_dir / primary_nwb.name)
     logging.info("Done")
 
 
