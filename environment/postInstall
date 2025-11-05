@@ -3,5 +3,4 @@ set -e
 git clone --branch fix/events_table https://github.com/AllenNeuralDynamics/aind-nwb-utils.git
 cd aind-nwb-utils
 pip install .
-echo "Installed"
-echo "Installed"
+echo "Installed fix/events_table branch of aind-nwb-utils"

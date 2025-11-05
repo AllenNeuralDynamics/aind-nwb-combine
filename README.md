@@ -20,7 +20,7 @@ The input directory should contain one **primary** folder and one or more **seco
 ```
 Files should follow [AIND NWB file standards](https://github.com/AllenNeuralDynamics/aind-file-standards/blob/main/docs/file_formats/nwb.md).
 
-Additionally, the `output_format` args input is used to defined the file_io format(zarr or HDF5) of the output NWB file. 
+Additionally, the `output_format` args input is used to define the file_io format(zarr or HDF5) of the output NWB file. 
 ## Output
 
 This output file contains data from all input NWB sources, with content merged into a singular NWB file.

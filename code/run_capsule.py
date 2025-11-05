@@ -59,7 +59,7 @@ def run():
             idx,
             len(nwb_secondaries)
         )
-        output_fp = combine_nwb_file(
+        combine_nwb_file(
             output_fp,
             secondary_fp,
             Path("/results/combined.nwb"),
