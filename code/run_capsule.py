@@ -32,6 +32,7 @@ def run():
     """
     combine_settings = NWBCombineSettings()
     input_dir = Path(combine_settings.input_dir)
+    output_dir = Path(combine_settings.output_dir)
 
     # Locate primary NWB file
     nwb_primary = next((input_dir / "nwb_primary").rglob("*.nwb"))
@@ -62,7 +63,7 @@ def run():
         combine_nwb_file(
             output_fp,
             secondary_fp,
-            Path("/results/combined.nwb"),
+            output_dir / "combined.nwb",
             save_io
         )
 
