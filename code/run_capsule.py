@@ -22,27 +22,35 @@ class NWBCombineSettings(
 
 
 def run():
-    """basic run function"""
+    """Combine one primary NWB file with multiple secondary NWB files."""
     combine_settings = NWBCombineSettings()
     input_dir = Path(combine_settings.input_dir)
     output_dir = Path(combine_settings.output_dir)
-    ophys_fp = next(input_dir.glob("ephys/*.nwb"))
-    behavior_fp = next(input_dir.glob("behavior/*.nwb"))
-    eye_fp = next(input_dir.glob("eye_tracking/*.nwb"))
+
+    # Locate primary NWB file
+    nwb_primary = next((input_dir / "nwb_primary").rglob("*.nwb"))
     save_io = NWBZarrIO
     if combine_settings.output_format.lower() == "hdf5":
         save_io = NWBHDF5IO
 
-    logging.info(
-        "Combining NWB files, %s, %s and %s", ophys_fp, behavior_fp, eye_fp)
-    for idx, nwb_fp in enumerate([behavior_fp, eye_fp]):
-        if idx == 0:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, save_io)
-        else:
-            output_fp = combine_nwb_file(output_fp, nwb_fp, save_io)
+    # Find all secondary NWB files (nwb_secondary, nwb_secondary_1, nwb_secondary_2, etc.)
+    secondary_dirs = sorted(input_dir.glob("nwb_secondary*"))
+    nwb_secondaries = []
+    for sec_dir in secondary_dirs:
+        try:
+            nwb_fp = next(sec_dir.rglob("*.nwb"))
+            nwb_secondaries.append(nwb_fp)
+        except StopIteration:
+            logging.warning("No NWB file found in %s", sec_dir)
 
-    shutil.move(output_fp, output_dir / "session.nwb")
-    logging.info("Done")
+    logging.info("Primary NWB: %s", nwb_primary)
+    logging.info("Secondary NWB files: %s", nwb_secondaries)
+
+    # Start combining
+    output_fp = nwb_primary
+    for idx, secondary_fp in enumerate(nwb_secondaries, start=1):
+        logging.info("Combining primary with %s (%d/%d)", secondary_fp, idx, len(nwb_secondaries))
+        output_fp = combine_nwb_file(output_fp, secondary_fp, Path("/results/combined.nwb"), save_io)
 
 
 if __name__ == "__main__":
