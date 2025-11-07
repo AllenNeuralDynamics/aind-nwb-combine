@@ -3,14 +3,12 @@
 from datetime import datetime as dt
 import json
 import logging
-import shutil
 from pathlib import Path
 
 from aind_nwb_utils.utils import combine_nwb_file
 from hdmf_zarr import NWBZarrIO
 from pydantic_settings import BaseSettings
 from pynwb import NWBHDF5IO
-
 
 
 class NWBCombineSettings(
@@ -24,29 +22,50 @@ class NWBCombineSettings(
 
 
 def run():
-    """basic run function"""
+    """
+    Runs NWB combine process
+    1. Locate primary NWB file in nwb_primary directory
+    2. Locate secondary NWB files in nwb_secondary, etc.
+    3. Combine primary with each secondary in order
+    4. Save combined NWB file in output directory
+    5. Output format can be zarr or hdf5
+    """
     combine_settings = NWBCombineSettings()
     input_dir = Path(combine_settings.input_dir)
     output_dir = Path(combine_settings.output_dir)
-    ophys_fp = next(input_dir.glob("ophys/*.nwb"))
-    behavior_fp = next(input_dir.glob("behavior/*.nwb"))
-    data_desc_fp = next(input_dir.rglob("data_description.json"))
-    with open(data_desc_fp) as j:
-        name = json.load(j)["name"]
-    name = name.split("processed")[0][:-1] + "_processed_" + dt.now().strftime("%y-%m-%d_%H-%M-%S") + ".nwb"
+
+    # Locate primary NWB file
+    nwb_primary = next((input_dir / "nwb_primary").rglob("*.nwb"))
     save_io = NWBZarrIO
     if combine_settings.output_format.lower() == "hdf5":
         save_io = NWBHDF5IO
 
-    logging.info(
-        "Combining NWB files, %s, %s and %s", ophys_fp, behavior_fp)
-    for idx, nwb_fp in enumerate([behavior_fp]):
-        if idx == 0:
-            output_fp = combine_nwb_file(ophys_fp, nwb_fp, "/scratch", save_io)
-        
+    secondary_dirs = sorted(input_dir.glob("nwb_secondary*"))
+    nwb_secondaries = []
+    for sec_dir in secondary_dirs:
+        try:
+            nwb_fp = next(sec_dir.rglob("*.nwb"))
+            nwb_secondaries.append(nwb_fp)
+        except StopIteration:
+            logging.warning("No NWB file found in %s", sec_dir)
 
-    shutil.move(output_fp, output_dir / name)
-    logging.info("Done")
+    logging.info("Primary NWB: %s", nwb_primary)
+    logging.info("Secondary NWB files: %s", nwb_secondaries)
+
+    output_fp = nwb_primary
+    for idx, secondary_fp in enumerate(nwb_secondaries, start=1):
+        logging.info(
+            "Combining primary with %s (%d/%d)",
+            secondary_fp,
+            idx,
+            len(nwb_secondaries)
+        )
+        combine_nwb_file(
+            output_fp,
+            secondary_fp,
+            output_dir / "combined.nwb",
+            save_io
+        )
 
 
 if __name__ == "__main__":

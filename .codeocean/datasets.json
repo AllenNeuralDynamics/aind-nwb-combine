@@ -2,12 +2,20 @@
 	"version": 1,
 	"attached_datasets": [
 		{
-			"id": "6f648e45-5bfc-40e0-b8f0-116b2d22b2ed",
-			"mount": "behavior"
+			"id": "5c19bc2b-3332-40b0-9ff3-a801f32b020b",
+			"mount": "nwb_primary"
 		},
 		{
-			"id": "d8d6076e-a856-40b3-884a-521601f687fd",
-			"mount": "ophys"
+			"id": "bea2eef6-cbda-4e8a-ab40-e3d973bc85fc",
+			"mount": "ephys"
+		},
+		{
+			"id": "cea5c998-a823-4837-8f64-8b304c313b6f",
+			"mount": "nwb_secondary_behavior"
+		},
+		{
+			"id": "dc0bf49d-5ecf-443c-8ef5-1a4430553c5d",
+			"mount": "nwb_secondary_eyes"
 		}
 	]
 }
