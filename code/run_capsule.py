@@ -30,9 +30,13 @@ def run():
     4. Save combined NWB file in output directory
     5. Output format can be zarr or hdf5
     """
+    print("RUNNING COMBINE CAPSULE")
     combine_settings = NWBCombineSettings()
+    print("COMBINE SETTINGS")
     input_dir = Path(combine_settings.input_dir)
     output_dir = Path(combine_settings.output_dir)
+    print("INPUT DIR:",input_dir,input_dir.exists())
+    print("OUTPUT DIR:",output_dir,output_dir.exists())
 
     # Locate primary NWB file
     nwb_primary = next((input_dir / "nwb_primary").rglob("*.nwb"))
