@@ -6,6 +6,14 @@
 			"mount": "nwb_primary"
 		},
 		{
+			"id": "798a79e6-9973-4a0b-bdd4-c7be741f7e2f",
+			"mount": "ophys"
+		},
+		{
+			"id": "9ce32bc1-831c-4ba2-9ed1-9a0406cb1ca6",
+			"mount": "ophys_2"
+		},
+		{
 			"id": "bea2eef6-cbda-4e8a-ab40-e3d973bc85fc",
 			"mount": "ephys"
 		},
