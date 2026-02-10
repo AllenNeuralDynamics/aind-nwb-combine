@@ -10,6 +10,7 @@ from hdmf_zarr import NWBZarrIO
 from pydantic_settings import BaseSettings
 from pynwb import NWBHDF5IO
 
+scratch_dir = "/scratch"
 
 class NWBCombineSettings(
     BaseSettings, cli_parse_args=True, cli_ignore_unknown_args=True
@@ -57,10 +58,12 @@ def run():
     print("Secondary NWB files: %s", nwb_secondaries)
 
     input_fp = nwb_primary
-    output_fp = output_dir / "combined.nwb"
     for idx, secondary_fp in enumerate(nwb_secondaries, start=1):
+        output_fp = scratch_dir / f"combined_step_{idx}.nwb"
+
         print(
-            f"Combining {output_fp} with secondary {secondary_fp}, ({idx}/{ len(nwb_secondaries) })",
+            f"Combining {input_fp} with secondary {secondary_fp} "
+            f"({idx}/{len(nwb_secondaries)})"
         )
         combine_nwb_file(
             input_fp,
@@ -68,7 +71,12 @@ def run():
             output_fp,
             save_io
         )
-        input_fp = output_fp
+        input_fp = output_fp  # next iteration reads the last result
+
+    # after the loop, input_fp points to the final combined file
+    final_fp = output_dir / "combined.nwb"
+    final_fp.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(input_fp, final_fp)
 
 
 if __name__ == "__main__":
