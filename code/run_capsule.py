@@ -56,20 +56,19 @@ def run():
     print("Primary NWB: %s", nwb_primary)
     print("Secondary NWB files: %s", nwb_secondaries)
 
-    output_fp = nwb_primary
+    input_fp = nwb_primary
+    output_fp = output_dir / "combined.nwb"
     for idx, secondary_fp in enumerate(nwb_secondaries, start=1):
         print(
-            "Combining primary with %s (%d/%d)",
-            secondary_fp,
-            idx,
-            len(nwb_secondaries)
+            f"Combining {output_fp} with secondary {secondary_fp}, ({idx}/{ len(nwb_secondaries) })",
         )
         combine_nwb_file(
-            output_fp,
+            input_fp,
             secondary_fp,
-            output_dir / "combined.nwb",
+            output_fp,
             save_io
         )
+        input_fp = output_fp
 
 
 if __name__ == "__main__":
