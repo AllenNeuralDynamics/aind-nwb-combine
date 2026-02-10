@@ -10,7 +10,7 @@ from hdmf_zarr import NWBZarrIO
 from pydantic_settings import BaseSettings
 from pynwb import NWBHDF5IO
 
-scratch_dir = "/scratch"
+scratch_dir = Path("/scratch")
 
 class NWBCombineSettings(
     BaseSettings, cli_parse_args=True, cli_ignore_unknown_args=True
