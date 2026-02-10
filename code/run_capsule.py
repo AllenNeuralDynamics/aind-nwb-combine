@@ -76,7 +76,6 @@ def run():
 
     # after the loop, input_fp points to the final combined file
     final_fp = output_dir / "combined.nwb"
-    final_fp.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(input_fp, final_fp)
 
 
