@@ -53,12 +53,12 @@ def run():
         except StopIteration:
             logging.warning("No NWB file found in %s", sec_dir)
 
-    logging.info("Primary NWB: %s", nwb_primary)
-    logging.info("Secondary NWB files: %s", nwb_secondaries)
+    print("Primary NWB: %s", nwb_primary)
+    print("Secondary NWB files: %s", nwb_secondaries)
 
     output_fp = nwb_primary
     for idx, secondary_fp in enumerate(nwb_secondaries, start=1):
-        logging.info(
+        print(
             "Combining primary with %s (%d/%d)",
             secondary_fp,
             idx,
