@@ -9,6 +9,7 @@ from aind_nwb_utils.utils import combine_nwb_file
 from hdmf_zarr import NWBZarrIO
 from pydantic_settings import BaseSettings
 from pynwb import NWBHDF5IO
+import shutil
 
 scratch_dir = Path("/scratch")
 
