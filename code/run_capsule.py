@@ -76,8 +76,9 @@ def run():
 
     # after the loop, input_fp points to the final combined file
     final_fp = output_dir / "combined.nwb"
+    print(f"outputting {input_fp} to {final_fp}")
     shutil.move(input_fp, final_fp)
-
+    assert final_fp.exists()
 
 if __name__ == "__main__":
     run()
