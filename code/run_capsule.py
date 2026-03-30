@@ -40,6 +40,14 @@ def run():
     print("INPUT DIR:",input_dir,input_dir.exists())
     print("OUTPUT DIR:",output_dir,output_dir.exists())
 
+    # useful in cloud work stations
+    print("clearing scratch folder")
+    for p in scratch_dir.iterdir():
+        if p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+
     # Locate primary NWB file
     nwb_primary = next((input_dir / "nwb_primary").rglob("*.nwb"))
     save_io = NWBZarrIO
